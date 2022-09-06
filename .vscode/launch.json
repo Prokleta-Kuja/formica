@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "formica",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-formica",
+            "program": "${workspaceFolder}/src/bin/Debug/net6.0/formica.dll",
+            "cwd": "${workspaceFolder}/src",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "http://0.0.0.0:5000"
+            },
+        }
+    ]
+}
