@@ -1,9 +1,68 @@
-<input type="text" @bind=Data.MyProperty>
-<button class="btn btn-primary" @onclick=Next>Next</button>
+<h3 class="text-center mb-3">You are</h3>
+<div class="mb-3">
+    <div class="form-check" @onclick=SetExternal>
+        <input class="form-check-input" type="radio" id="external" checked=@(Data.From == Who.ExternalRecruiter)>
+        <label class="form-check-label" for="external">
+            Recruiting for a client
+        </label>
+    </div>
+    <div class="form-check" @onclick=SetInternal>
+        <input class="form-check-input" type="radio" id="internal" checked=@(Data.From == Who.InternalRecruiter)>
+        <label class="form-check-label" for="internal">
+            Recruiting for your company
+        </label>
+    </div>
+    <div class="form-check" @onclick=SetFreelancer>
+        <input class="form-check-input" type="radio" id="freelancer" checked=@(Data.From == Who.Freelancer)>
+        <label class="form-check-label" for="freelancer">
+            A freelancer looking for a partner
+        </label>
+    </div>
+</div>
+
+@if (Recruiters.HasFlag(Data.From))
+{
+    <div class="mb-3">
+    <label for="company-name" class="form-label">@_companyLabel *</label>
+    <input type="text" class="form-control" id="company-name" @bind=Data.CompanyName>
+</div>
+    if (Data.From == Who.ExternalRecruiter)
+    {
+        <div class="mb-3 form-check" @onclick=SetWithhold>
+    <input type="checkbox" class="form-check-input" id="withhold" checked=@Data.WithholdingCompanyName>
+    <label class="form-check-label" for="withold">I don't want to disclose client name (please input your company name
+        then)</label>
+</div>
+    }
+}
+
+@if (Data.From != Who.NotSet)
+{
+    <div class="mb-3">
+    <label for="name" class="form-label">Your name *</label>
+    <input type="text" class="form-control" id="name" @bind=Data.FromName>
+</div>
+    <div class="mb-3">
+    <label for="contact" class="form-label">Contact *</label>
+    <textarea class="form-control" id="contact" rows="3"></textarea>
+</div>
+}
 
 @code {
     [CascadingParameter] public Data Data { get; set; } = null!;
     [Parameter] public EventCallback OnChange { get; set; }
+    static readonly Who Recruiters = Who.ExternalRecruiter | Who.InternalRecruiter;
+    void SetExternal() { Data.From = Who.ExternalRecruiter; Data.WithholdingCompanyName = false; }
+    void SetInternal() { Data.From = Who.InternalRecruiter; Data.WithholdingCompanyName = false; }
+    void SetFreelancer() { Data.From = Who.Freelancer; Data.WithholdingCompanyName = false; }
+    void SetWithhold() => Data.WithholdingCompanyName = !Data.WithholdingCompanyName;
+    string _companyLabel => Data.From switch
+    {
+        Who.ExternalRecruiter when Data.WithholdingCompanyName => "Your company",
+        Who.ExternalRecruiter => "Client company",
+        Who.InternalRecruiter => "Your company",
+        _ => string.Empty
+    };
 
     async Task Next()
     {
