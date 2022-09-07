@@ -20,7 +20,16 @@ public partial class Index
         _initialLoading = false;
         var guid = await ProtectedSessionStore.GetAsync<Guid>(DOC_ID);
         if (guid.Success)
+        {
             _file = new(C.DataFor(guid.Value));
+            if (_file.Exists)
+            {
+                using var reader = _file.OpenRead();
+                var data = JsonSerializer.Deserialize<Data>(reader);
+                if (data != null)
+                    _data = data;
+            }
+        }
 
         StateHasChanged();
     }

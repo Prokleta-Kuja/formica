@@ -1,0 +1,13 @@
+<input type="text" @bind=Data.MyProperty>
+<button class="btn btn-primary" @onclick=Next>Next</button>
+
+@code {
+    [CascadingParameter] public Data Data { get; set; } = null!;
+    [Parameter] public EventCallback OnChange { get; set; }
+
+    async Task Next()
+    {
+        if (OnChange.HasDelegate)
+            await OnChange.InvokeAsync();
+    }
+}

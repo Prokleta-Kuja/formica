@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.DataProtection;
 
 namespace formica;
 
@@ -7,9 +8,10 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        Directory.CreateDirectory(C.Data);
 
         var builder = WebApplication.CreateBuilder(args);
+        builder.Services.AddDataProtection()
+            .PersistKeysToFileSystem(new DirectoryInfo(C.Data));
 
         // Add services to the container.
         builder.Services.AddRazorPages();
