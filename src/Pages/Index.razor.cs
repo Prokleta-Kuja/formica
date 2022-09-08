@@ -36,9 +36,18 @@ public partial class Index
     async Task Start()
     {
         using var stream = _file.Create();
-        JsonSerializer.Serialize(stream, _data);
+        await JsonSerializer.SerializeAsync(stream, _data);
 
         _file.Refresh();
         await ProtectedSessionStore.SetAsync(DOC_ID, Path.GetFileNameWithoutExtension(_file.Name));
+    }
+    async Task Update()
+    {
+        _file.Delete();
+        using var stream = _file.Create();
+        await JsonSerializer.SerializeAsync(stream, _data);
+
+        _file.Refresh();
+        StateHasChanged();
     }
 }

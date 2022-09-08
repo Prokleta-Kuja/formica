@@ -19,7 +19,23 @@ public class Data
         var sb = new StringBuilder();
 
         // WhoAreYou
-
+        switch (From)
+        {
+            case Who.ExternalRecruiter:
+                sb.Append($"External recruiter {FromName}");
+                if (WithholdingCompanyName)
+                    sb.Append($"from {CompanyName}, without disclosing client name,");
+                else
+                    sb.Append($"on behalf of his client {CompanyName}");
+                break;
+            case Who.InternalRecruiter:
+                sb.Append($"Internal recruiter {FromName} from {CompanyName}");
+                break;
+            case Who.Freelancer:
+                sb.Append($"Freelancer {FromName}");
+                break;
+        }
+        sb.AppendLine(" reached out you.");
 
         return sb.ToString();
     }

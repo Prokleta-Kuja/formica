@@ -1,57 +1,76 @@
-<h3 class="text-center mb-3">You are</h3>
-<div class="mb-3">
-    <div class="form-check" @onclick=SetExternal>
-        <input class="form-check-input" type="radio" id="external" checked=@(Data.From == Who.ExternalRecruiter)>
-        <label class="form-check-label" for="external">
-            Recruiting for a client
-        </label>
-    </div>
-    <div class="form-check" @onclick=SetInternal>
-        <input class="form-check-input" type="radio" id="internal" checked=@(Data.From == Who.InternalRecruiter)>
-        <label class="form-check-label" for="internal">
-            Recruiting for your company
-        </label>
-    </div>
-    <div class="form-check" @onclick=SetFreelancer>
-        <input class="form-check-input" type="radio" id="freelancer" checked=@(Data.From == Who.Freelancer)>
-        <label class="form-check-label" for="freelancer">
-            A freelancer looking for a partner
-        </label>
-    </div>
-</div>
-
-@if (Recruiters.HasFlag(Data.From))
-{
+<form @onsubmit=Next>
+    <h3 class="text-center mb-3">You are</h3>
     <div class="mb-3">
-    <label for="company-name" class="form-label">@_companyLabel *</label>
-    <input type="text" class="form-control" id="company-name" @bind=Data.CompanyName>
-</div>
-    if (Data.From == Who.ExternalRecruiter)
+        <div class="form-check" @onclick=SetExternal>
+            <input class="form-check-input @ValidationClass(nameof(Data.From))" type="radio" id="external" name="who"
+                checked=@(Data.From == Who.ExternalRecruiter)>
+            <label class="form-check-label" for="external">
+                Recruiting for a client
+            </label>
+        </div>
+        <div class="form-check" @onclick=SetInternal>
+            <input class="form-check-input @ValidationClass(nameof(Data.From))" type="radio" id="internal" name="who"
+                checked=@(Data.From == Who.InternalRecruiter)>
+            <label class="form-check-label" for="internal">
+                Recruiting for your company
+            </label>
+        </div>
+        <div class="form-check" @onclick=SetFreelancer>
+            <input class="form-check-input @ValidationClass(nameof(Data.From))" type="radio" id="freelancer" name="who"
+                checked=@(Data.From == Who.Freelancer)>
+            <label class="form-check-label" for="freelancer">
+                A freelancer looking for a partner
+            </label>
+            <div class="invalid-feedback">@ValidationMessage(nameof(Data.From))</div>
+        </div>
+    </div>
+
+    @if (Recruiters.HasFlag(Data.From))
     {
-        <div class="mb-3 form-check" @onclick=SetWithhold>
-    <input type="checkbox" class="form-check-input" id="withhold" checked=@Data.WithholdingCompanyName>
-    <label class="form-check-label" for="withold">I don't want to disclose client name (please input your company name
-        then)</label>
-</div>
+        <div class="mb-3">
+            <label for="company-name" class="form-label">@_companyLabel *</label>
+            <input type="text" class="form-control @ValidationClass(nameof(Data.CompanyName))" id="company-name"
+            @bind=Data.CompanyName>
+            <div class="invalid-feedback">@ValidationMessage(nameof(Data.CompanyName))</div>
+        </div>
+        if (Data.From == Who.ExternalRecruiter)
+        {
+            <div class="mb-3 form-check" @onclick=SetWithhold>
+                <input type="checkbox" class="form-check-input" id="withhold" checked=@Data.WithholdingCompanyName>
+                <label class="form-check-label" for="withold">
+                    I don't want to disclose client name (please input your company name then)
+                </label>
+            </div>
+        }
     }
-}
 
-@if (Data.From != Who.NotSet)
-{
-    <div class="mb-3">
-    <label for="name" class="form-label">Your name *</label>
-    <input type="text" class="form-control" id="name" @bind=Data.FromName>
-</div>
-    <div class="mb-3">
-    <label for="contact" class="form-label">Contact *</label>
-    <textarea class="form-control" id="contact" rows="3"></textarea>
-</div>
-}
+    @if (Data.From != Who.NotSet)
+    {
+        <div class="mb-3">
+            <label for="name" class="form-label">Your name *</label>
+            <input type="text" class="form-control @ValidationClass(nameof(Data.FromName))" id="name" @bind=Data.FromName>
+            <div class="invalid-feedback">@ValidationMessage(nameof(Data.FromName))</div>
+        </div>
+        <div class="mb-3">
+            <label for="contact" class="form-label">Contact *</label>
+            <textarea class="form-control @ValidationClass(nameof(Data.Contact))" id="contact" rows="3"
+            @bind=Data.Contact></textarea>
+            <div class="invalid-feedback">@ValidationMessage(nameof(Data.Contact))</div>
+        </div>
+    }
+
+    <div class="d-flex justify-content-between">
+        <div></div>
+        <button type="submit" class="btn btn-warning">Next</button>
+    </div>
+</form>
 
 @code {
     [CascadingParameter] public Data Data { get; set; } = null!;
     [Parameter] public EventCallback OnChange { get; set; }
     static readonly Who Recruiters = Who.ExternalRecruiter | Who.InternalRecruiter;
+    bool _wasValidated;
+    readonly Dictionary<string, string> _errors = new();
     void SetExternal() { Data.From = Who.ExternalRecruiter; Data.WithholdingCompanyName = false; }
     void SetInternal() { Data.From = Who.InternalRecruiter; Data.WithholdingCompanyName = false; }
     void SetFreelancer() { Data.From = Who.Freelancer; Data.WithholdingCompanyName = false; }
@@ -63,10 +82,39 @@
         Who.InternalRecruiter => "Your company",
         _ => string.Empty
     };
-
-    async Task Next()
+    string ValidationClass(string field)
     {
-        if (OnChange.HasDelegate)
+        if (_errors.ContainsKey(field))
+            return "is-invalid";
+        if (_wasValidated)
+            return "is-valid";
+        return string.Empty;
+    }
+    string ValidationMessage(string field)
+    {
+        if (_errors.TryGetValue(field, out var message))
+            return message;
+        return string.Empty;
+    }
+    bool Validate()
+    {
+        _wasValidated = true;
+        _errors.Clear();
+        if (Data.From == Who.NotSet)
+            _errors.Add(nameof(Data.From), "Please select who you are");
+        if (Data.From != Who.Freelancer && string.IsNullOrWhiteSpace(Data.CompanyName))
+            _errors.Add(nameof(Data.CompanyName), "Please enter company name");
+        if (string.IsNullOrWhiteSpace(Data.FromName))
+            _errors.Add(nameof(Data.FromName), "Plese enter your name");
+        if (string.IsNullOrWhiteSpace(Data.Contact))
+            _errors.Add(nameof(Data.Contact), "Please enter a way to contact you");
+        return !_errors.Any();
+    }
+    async Task<EventCallback<EventArgs>> Next()
+    {
+        if (Validate() && OnChange.HasDelegate)
             await OnChange.InvokeAsync();
+
+        return default;
     }
 }
