@@ -1,6 +1,9 @@
 using System.Text.Json;
+using MailKit.Net.Smtp;
+using MailKit.Security;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using MimeKit;
 
 namespace formica.Pages;
 
@@ -49,5 +52,29 @@ public partial class Index
 
         _file.Refresh();
         StateHasChanged();
+
+        if (_data.Step == Steps.Sending)
+            await Send();
+    }
+    async Task Send()
+    {
+        _data.FinishedAt = DateTime.UtcNow;
+        var email = new MimeMessage();
+        email.Subject = C.Settings.Subject;
+        email.From.Add(MailboxAddress.Parse(C.Settings.From));
+        email.To.Add(MailboxAddress.Parse(C.Settings.To));
+
+        var bb = new BodyBuilder();
+        bb.TextBody = _data.GetText();
+        email.Body = bb.ToMessageBody();
+
+        using var client = new SmtpClient();
+        await client.ConnectAsync(C.Settings.Host, C.Settings.Port, SecureSocketOptions.Auto);
+        await client.AuthenticateAsync(C.Settings.Username, C.Settings.Password);
+        await client.SendAsync(email);
+        await client.DisconnectAsync(true);
+
+        _data.Step = Steps.ThankYou;
+        await Update();
     }
 }

@@ -1,0 +1,175 @@
+<form @onsubmit=Next>
+    <h3 class="text-center mb-3">Selection process consists of</h3>
+
+    <div class="mb-3 form-check" @onclick=SetGeneral>
+        <input type="checkbox" class="form-check-input @ValidationClass(nameof(Data.Process))"
+            checked=@Data.Process.HasFlag(Selection.GeneralInterview)>
+        <label class="form-check-label">
+            General Interview
+        </label>
+    </div>
+    <div class="mb-3 form-check" @onclick=SetTech>
+        <input type="checkbox" class="form-check-input @ValidationClass(nameof(Data.Process))"
+            checked=@Data.Process.HasFlag(Selection.TechInterview)>
+        <label class="form-check-label">
+            Tech Interview
+        </label>
+    </div>
+    <div class="mb-3 form-check" @onclick=SetWhiteboard>
+        <input type="checkbox" class="form-check-input @ValidationClass(nameof(Data.Process))"
+            checked=@Data.Process.HasFlag(Selection.WhiteboardInterview)>
+        <label class="form-check-label">
+            Whiteboard Interview
+        </label>
+    </div>
+    <div class="mb-3 form-check" @onclick=SetEnglish>
+        <input type="checkbox" class="form-check-input @ValidationClass(nameof(Data.Process))"
+            checked=@Data.Process.HasFlag(Selection.EnglishTest)>
+        <label class="form-check-label">
+            English Test
+        </label>
+    </div>
+    <div class="mb-3 form-check" @onclick=SetPersonality>
+        <input type="checkbox" class="form-check-input @ValidationClass(nameof(Data.Process))"
+            checked=@Data.Process.HasFlag(Selection.PersonalityTest)>
+        <label class="form-check-label">
+            Personality Test
+        </label>
+    </div>
+    <div class="mb-3 form-check" @onclick=SetIntelligence>
+        <input type="checkbox" class="form-check-input @ValidationClass(nameof(Data.Process))"
+            checked=@Data.Process.HasFlag(Selection.IntelligenceTest)>
+        <label class="form-check-label">
+            Intelligence Test
+        </label>
+    </div>
+    <div class="mb-3 form-check" @onclick=SetCodeTest>
+        <input type="checkbox" class="form-check-input @ValidationClass(nameof(Data.Process))"
+            checked=@Data.Process.HasFlag(Selection.CodeTest)>
+        <label class="form-check-label">
+            Data Structures and Algorithms Test
+        </label>
+    </div>
+    <div class="mb-3 form-check" @onclick=SetCodeReview>
+        <input type="checkbox" class="form-check-input @ValidationClass(nameof(Data.Process))"
+            checked=@Data.Process.HasFlag(Selection.CodeReview)>
+        <label class="form-check-label">
+            Code Review
+        </label>
+    </div>
+    <div class="mb-3 form-check" @onclick=SetWorkAssignment>
+        <input type="checkbox" class="form-check-input @ValidationClass(nameof(Data.Process))"
+            checked=@Data.Process.HasFlag(Selection.WorkAssignment)>
+        <label class="form-check-label">
+            Take Home Assignment
+        </label>
+        <div class="invalid-feedback">@ValidationMessage(nameof(Data.Process))</div>
+    </div>
+
+    <div class="mb-3">
+        <label for="duration" class="form-label">Estimated process duration *</label>
+        <input type="text" class="form-control @ValidationClass(nameof(Data.SelectionDuration))" id="duration"
+            @bind=Data.SelectionDuration placeholder="2 hours, 20-40 hours...">
+        <div class="invalid-feedback">@ValidationMessage(nameof(Data.SelectionDuration))</div>
+    </div>
+
+    <label>Will you provide constructive feedback at the end of the process, no matter the outcome?</label>
+    <div class="mb-3">
+        <div class="form-check" @onclick=SetFeedbackYes>
+            <input class="form-check-input @ValidationClass(nameof(Data.Feedback))" type="radio" id="feedback-yes"
+                name="feedback" checked=@(Data.Feedback)>
+            <label class="form-check-label" for="feedback-yes">
+                Yes
+            </label>
+        </div>
+        <div class="form-check" @onclick=SetFeedbackNo>
+            <input class="form-check-input @ValidationClass(nameof(Data.Feedback))" type="radio" id="feedback-no"
+                name="feedback" checked=@(!Data.Feedback)>
+            <label class="form-check-label" for="feedback-no">
+                No
+            </label>
+            <div class="invalid-feedback">@ValidationMessage(nameof(Data.Feedback))</div>
+        </div>
+    </div>
+
+    @if (Data.Process.HasFlag(Selection.WorkAssignment))
+    {
+        <div class="mb-3">
+            <label for="compensation" class="form-label">Is Take Home Assignment compensated? If so, what is the total
+                compensation? *</label>
+            <input type="text" class="form-control @ValidationClass(nameof(Data.WorkAssignmentCompensation))"
+            id="compensation" @bind=Data.WorkAssignmentCompensation placeholder="No, Yes $300...">
+            <div class="invalid-feedback">@ValidationMessage(nameof(Data.WorkAssignmentCompensation))</div>
+        </div>
+    }
+
+    <div class="d-flex justify-content-between">
+        <button type="button" class="btn btn-secondary" @onclick=Back>Back</button>
+        <button type="submit" class="btn btn-warning">Next</button>
+    </div>
+</form>
+
+@code {
+    [CascadingParameter] public Data Data { get; set; } = null!;
+    [Parameter] public EventCallback OnChange { get; set; }
+    bool _wasValidated;
+    readonly Dictionary<string, string> _errors = new();
+    void SetGeneral() => Data.Process ^= Selection.GeneralInterview;
+    void SetTech() => Data.Process ^= Selection.TechInterview;
+    void SetWhiteboard() => Data.Process ^= Selection.WhiteboardInterview;
+    void SetEnglish() => Data.Process ^= Selection.EnglishTest;
+    void SetPersonality() => Data.Process ^= Selection.PersonalityTest;
+    void SetIntelligence() => Data.Process ^= Selection.IntelligenceTest;
+    void SetCodeTest() => Data.Process ^= Selection.CodeTest;
+    void SetCodeReview() => Data.Process ^= Selection.CodeReview;
+    void SetWorkAssignment() => Data.Process ^= Selection.WorkAssignment;
+    void SetFeedbackYes() => Data.Feedback = true;
+    void SetFeedbackNo() => Data.Feedback = false;
+    string ValidationClass(string field)
+    {
+        if (_errors.ContainsKey(field))
+            return "is-invalid";
+        if (_wasValidated)
+            return "is-valid";
+        return string.Empty;
+    }
+    string ValidationMessage(string field)
+    {
+        if (_errors.TryGetValue(field, out var message))
+            return message;
+        return string.Empty;
+    }
+    bool Validate()
+    {
+        _wasValidated = true;
+        _errors.Clear();
+        var processCount = Convert.ToString(Convert.ToInt32(Data.For), 2).Count(b => b == '1'); // Get flags count
+        if (processCount == 0)
+            _errors.Add(nameof(Data.Process), "Please select all that apply");
+        if (string.IsNullOrWhiteSpace(Data.SelectionDuration))
+            _errors.Add(nameof(Data.SelectionDuration), "Please enter estimated duration");
+        if (Data.Process.HasFlag(Selection.WorkAssignment) && string.IsNullOrWhiteSpace(Data.WorkAssignmentCompensation))
+            _errors.Add(nameof(Data.WorkAssignmentCompensation), "Please enter compensation info");
+        if (!Data.Feedback.HasValue)
+            _errors.Add(nameof(Data.Feedback), "Please select one");
+        return !_errors.Any();
+    }
+    async Task Back()
+    {
+        if (OnChange.HasDelegate)
+        {
+            Data.Step = Steps.LookingFor;
+            await OnChange.InvokeAsync();
+        }
+    }
+    async Task<EventCallback<EventArgs>> Next()
+    {
+        if (Validate() && OnChange.HasDelegate)
+        {
+            Data.Step = Steps.Compensation;
+            await OnChange.InvokeAsync();
+        }
+
+        return default;
+    }
+}

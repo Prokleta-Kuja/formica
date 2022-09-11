@@ -21,6 +21,40 @@ else if (!_file.Exists)
 else
 {
     <CascadingValue Value=@_data>
-    <WhoAreYou OnChange=Update />
+    @switch (_data.Step)
+    {
+        case Steps.WhoAreYou:
+            <WhoAreYou OnChange=Update />
+            break;
+        case Steps.LookingFor:
+            <LookingFor OnChange=Update />
+            break;
+        case Steps.SelectionProcess:
+            <SelectionProcess OnChange=Update />
+            break;
+        case Steps.Compensation:
+            <Compensation OnChange=Update />
+            break;
+        case Steps.Sending:
+            <div class="mt-5 text-center">
+                <div class="spinner-border text-warning" role="status">
+                    <span class="visually-hidden">Sending...</span>
+                </div>
+            </div>
+            break;
+        case Steps.ThankYou:
+            <h1 class="mb-5">Thank you!</h1>
+            break;
+        default:
+            break;
+    }
 </CascadingValue>
+}
+
+@if (System.Diagnostics.Debugger.IsAttached)
+{
+    <button type=button class="btn btn-danger mt-5" @onclick=StateHasChanged>Refresh</button>
+    <pre style="white-space: pre-line;">
+        @_data.GetText()
+    </pre>
 }

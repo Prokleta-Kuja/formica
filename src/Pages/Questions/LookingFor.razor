@@ -1,0 +1,165 @@
+<form @onsubmit=Next>
+    <h3 class="text-center mb-3">You are looking for</h3>
+
+    <div class="mb-3 form-check" @onclick=SetFull>
+        <input type="checkbox" class="form-check-input @ValidationClass(nameof(Data.For))"
+            checked=@Data.For.HasFlag(For.FullTime)>
+        <label class="form-check-label">
+            Full time engagement (40hrs per week)
+        </label>
+    </div>
+    <div class="mb-3 form-check" @onclick=SetPart>
+        <input type="checkbox" class="form-check-input @ValidationClass(nameof(Data.For))"
+            checked=@Data.For.HasFlag(For.PartTime)>
+        <label class="form-check-label">
+            Part time engagement
+        </label>
+    </div>
+    <div class="mb-3 form-check" @onclick=SetProject>
+        <input type="checkbox" class="form-check-input @ValidationClass(nameof(Data.For))"
+            checked=@Data.For.HasFlag(For.Project)>
+        <label class="form-check-label">
+            Project engagement
+        </label>
+        <div class="invalid-feedback">@ValidationMessage(nameof(Data.For))</div>
+    </div>
+
+    @if (Data.For.HasFlag(For.PartTime) || Data.For.HasFlag(For.Project))
+    {
+        <div class="mb-3">
+            <label for="per-week" class="form-label">Expected hours per week *</label>
+            <input type="text" class="form-control @ValidationClass(nameof(Data.HrsPerWeek))" id="per-week"
+            @bind=Data.HrsPerWeek placeholder="15, 20-40...">
+            <div class="invalid-feedback">@ValidationMessage(nameof(Data.HrsPerWeek))</div>
+        </div>
+    }
+
+    <div class="mb-3">
+        <label for="duration" class="form-label">Engagement duration *</label>
+        <input type="text" class="form-control @ValidationClass(nameof(Data.Duration))" id="duration"
+            @bind=Data.Duration placeholder="3 months, continous...">
+        <div class="invalid-feedback">@ValidationMessage(nameof(Data.Duration))</div>
+    </div>
+
+    <label>Relationship</label>
+    <div class="mb-3 form-check" @onclick=SetEmployment>
+        <input type="checkbox" class="form-check-input @ValidationClass(nameof(Data.Relationship))"
+            checked=@Data.Relationship.HasFlag(Relationship.Employment)>
+        <label class="form-check-label">
+            Employer - Employee
+        </label>
+    </div>
+    <div class="mb-3 form-check" @onclick=SetB2b>
+        <input type="checkbox" class="form-check-input @ValidationClass(nameof(Data.Relationship))"
+            checked=@Data.Relationship.HasFlag(Relationship.B2B)>
+        <label class="form-check-label">
+            B2B
+        </label>
+        <div class="invalid-feedback">@ValidationMessage(nameof(Data.Relationship))</div>
+    </div>
+
+    <label>Work from</label>
+    <div class="mb-3 form-check" @onclick=SetOffice>
+        <input type="checkbox" class="form-check-input @ValidationClass(nameof(Data.Place))"
+            checked=@Data.Place.HasFlag(Place.Office)>
+        <label class="form-check-label">
+            Office
+        </label>
+    </div>
+    <div class="mb-3 form-check" @onclick=SetCombination>
+        <input type="checkbox" class="form-check-input @ValidationClass(nameof(Data.Place))"
+            checked=@Data.Place.HasFlag(Place.Combination)>
+        <label class="form-check-label">
+            Combination
+        </label>
+    </div>
+    <div class="mb-3 form-check" @onclick=SetRemote>
+        <input type="checkbox" class="form-check-input @ValidationClass(nameof(Data.Place))"
+            checked=@Data.Place.HasFlag(Place.Remote)>
+        <label class="form-check-label">
+            Remote
+        </label>
+        <div class="invalid-feedback">@ValidationMessage(nameof(Data.Place))</div>
+    </div>
+
+    <div class="mb-3">
+        <label for="tech-stack" class="form-label">Technology stack *</label>
+        <textarea class="form-control @ValidationClass(nameof(Data.TechStack))" id="tech-stack" rows="3"
+            @bind=Data.TechStack></textarea>
+        <div class="invalid-feedback">@ValidationMessage(nameof(Data.TechStack))</div>
+    </div>
+
+
+    <div class="d-flex justify-content-between">
+        <button type="button" class="btn btn-secondary" @onclick=Back>Back</button>
+        <button type="submit" class="btn btn-warning">Next</button>
+    </div>
+</form>
+
+@code {
+    [CascadingParameter] public Data Data { get; set; } = null!;
+    [Parameter] public EventCallback OnChange { get; set; }
+    bool _wasValidated;
+    readonly Dictionary<string, string> _errors = new();
+    void SetFull() => Data.For ^= For.FullTime;
+    void SetPart() => Data.For ^= For.PartTime;
+    void SetProject() => Data.For ^= For.Project;
+    void SetEmployment() => Data.Relationship ^= Relationship.Employment;
+    void SetB2b() => Data.Relationship ^= Relationship.B2B;
+    void SetOffice() => Data.Place ^= Place.Office;
+    void SetCombination() => Data.Place ^= Place.Combination;
+    void SetRemote() => Data.Place ^= Place.Remote;
+    string ValidationClass(string field)
+    {
+        if (_errors.ContainsKey(field))
+            return "is-invalid";
+        if (_wasValidated)
+            return "is-valid";
+        return string.Empty;
+    }
+    string ValidationMessage(string field)
+    {
+        if (_errors.TryGetValue(field, out var message))
+            return message;
+        return string.Empty;
+    }
+    bool Validate()
+    {
+        _wasValidated = true;
+        _errors.Clear();
+        var forCount = Convert.ToString(Convert.ToInt32(Data.For), 2).Count(b => b == '1'); // Get flags count
+        var relationshipCount = Convert.ToString(Convert.ToInt32(Data.Relationship), 2).Count(b => b == '1');
+        var placeCount = Convert.ToString(Convert.ToInt32(Data.Place), 2).Count(b => b == '1');
+        if (forCount == 0)
+            _errors.Add(nameof(Data.For), "Please select at least one");
+        if ((Data.For.HasFlag(For.PartTime) || Data.For.HasFlag(For.Project)) && string.IsNullOrWhiteSpace(Data.HrsPerWeek))
+            _errors.Add(nameof(Data.HrsPerWeek), "Please enter expected hours per week");
+        if (string.IsNullOrWhiteSpace(Data.Duration))
+            _errors.Add(nameof(Data.Duration), "Please enter estimated engagement duration");
+        if (relationshipCount == 0)
+            _errors.Add(nameof(Data.Relationship), "Please select at least one");
+        if (placeCount == 0)
+            _errors.Add(nameof(Data.Place), "Please select at least one");
+        if (string.IsNullOrWhiteSpace(Data.TechStack))
+            _errors.Add(nameof(Data.TechStack), "Please enter what technology stack knowledge you need");
+        return !_errors.Any();
+    }
+    async Task Back()
+    {
+        if (OnChange.HasDelegate)
+        {
+            Data.Step = Steps.WhoAreYou;
+            await OnChange.InvokeAsync();
+        }
+    }
+    async Task<EventCallback<EventArgs>> Next()
+    {
+        if (Validate() && OnChange.HasDelegate)
+        {
+            Data.Step = Steps.SelectionProcess;
+            await OnChange.InvokeAsync();
+        }
+
+        return default;
+    }
+}

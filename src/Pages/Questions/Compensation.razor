@@ -1,0 +1,102 @@
+<form @onsubmit=Next>
+    <h3 class="text-center mb-3">Compensation</h3>
+
+    <label>Are you willing to share compensation details at this point?</label>
+    <div class="mb-3">
+        <div class="form-check" @onclick=SetCompensationYes>
+            <input class="form-check-input @ValidationClass(nameof(Data.WillingToShareCompensation))" type="radio"
+                id="compensation-yes" name="compensation" checked=@(Data.WillingToShareCompensation)>
+            <label class="form-check-label" for="compensation-yes">
+                Yes
+            </label>
+        </div>
+        <div class="form-check" @onclick=SetCompensationNo>
+            <input class="form-check-input @ValidationClass(nameof(Data.WillingToShareCompensation))" type="radio"
+                id="compensation-no" name="compensation" checked=@(!Data.WillingToShareCompensation)>
+            <label class="form-check-label" for="compensation-no">
+                No
+            </label>
+            <div class="invalid-feedback">@ValidationMessage(nameof(Data.WillingToShareCompensation))</div>
+        </div>
+    </div>
+
+    @if (Data.WillingToShareCompensation.HasValue)
+    {
+        if (Data.WillingToShareCompensation.Value)
+        {
+            <div class="mb-3">
+                <label for="comp-details" class="form-label">Compensation details *</label>
+                <textarea class="form-control @ValidationClass(nameof(Data.Compensation))" id="comp-details" rows="3"
+            @bind=Data.Compensation></textarea>
+                <div class="invalid-feedback">@ValidationMessage(nameof(Data.Compensation))</div>
+            </div>
+        }
+        else
+        {
+            <div class="mb-3">
+                <label for="share" class="form-label">At which point of the selection process will it be shared?</label>
+                <input type="text" class="form-control @ValidationClass(nameof(Data.ShareCompensationStep))" id="share"
+            @bind=Data.ShareCompensationStep>
+                <div class="invalid-feedback">@ValidationMessage(nameof(Data.ShareCompensationStep))</div>
+            </div>
+        }
+    }
+
+    <div class="d-flex justify-content-between">
+        <button type="button" class="btn btn-secondary" @onclick=Back>Back</button>
+        <button type="submit" class="btn btn-warning">Next</button>
+    </div>
+</form>
+
+@code {
+    [CascadingParameter] public Data Data { get; set; } = null!;
+    [Parameter] public EventCallback OnChange { get; set; }
+    bool _wasValidated;
+    readonly Dictionary<string, string> _errors = new();
+    void SetCompensationYes() => Data.WillingToShareCompensation = true;
+    void SetCompensationNo() => Data.WillingToShareCompensation = false;
+    string ValidationClass(string field)
+    {
+        if (_errors.ContainsKey(field))
+            return "is-invalid";
+        if (_wasValidated)
+            return "is-valid";
+        return string.Empty;
+    }
+    string ValidationMessage(string field)
+    {
+        if (_errors.TryGetValue(field, out var message))
+            return message;
+        return string.Empty;
+    }
+    bool Validate()
+    {
+        _wasValidated = true;
+        _errors.Clear();
+        if (!Data.WillingToShareCompensation.HasValue)
+            _errors.Add(nameof(Data.WillingToShareCompensation), "Please select one");
+        else if (Data.WillingToShareCompensation.Value && string.IsNullOrWhiteSpace(Data.Compensation))
+            _errors.Add(nameof(Data.Compensation), "Please specify compensation details");
+        else if (!Data.WillingToShareCompensation.Value && string.IsNullOrWhiteSpace(Data.ShareCompensationStep))
+            _errors.Add(nameof(Data.ShareCompensationStep), "Please specify when will compensation details be known");
+        return !_errors.Any();
+    }
+    async Task Back()
+    {
+        if (OnChange.HasDelegate)
+        {
+            Data.Step = Steps.SelectionProcess;
+            await OnChange.InvokeAsync();
+        }
+    }
+    async Task<EventCallback<EventArgs>> Next()
+    {
+        if (Validate() && OnChange.HasDelegate)
+        {
+            Data.Step = Steps.Sending;
+            await OnChange.InvokeAsync();
+        }
+
+        return default;
+    }
+}

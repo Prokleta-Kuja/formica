@@ -46,6 +46,22 @@
 
     @if (Data.From != Who.NotSet)
     {
+        if (Recruiters.HasFlag(Data.From))
+        {
+            <div class="mb-3 form-check" @onclick=SetBased>
+                <input type="checkbox" class="form-check-input" checked=@Data.CompanyCroBased>
+                <label class="form-check-label">
+                    @_basedCompanyLabel is based in Croatia
+                </label>
+            </div>
+            <div class="mb-3 form-check" @onclick=SetOffice>
+                <input type="checkbox" class="form-check-input" checked=@Data.CompanyCroOffice>
+                <label class="form-check-label">
+                    @_basedCompanyLabel has office(s) in Croatia
+                </label>
+            </div>
+        }
+
         <div class="mb-3">
             <label for="name" class="form-label">Your name *</label>
             <input type="text" class="form-control @ValidationClass(nameof(Data.FromName))" id="name" @bind=Data.FromName>
@@ -73,8 +89,14 @@
     readonly Dictionary<string, string> _errors = new();
     void SetExternal() { Data.From = Who.ExternalRecruiter; Data.WithholdingCompanyName = false; }
     void SetInternal() { Data.From = Who.InternalRecruiter; Data.WithholdingCompanyName = false; }
-    void SetFreelancer() { Data.From = Who.Freelancer; Data.WithholdingCompanyName = false; }
+    void SetFreelancer()
+    {
+        Data.From = Who.Freelancer;
+        Data.WithholdingCompanyName = Data.CompanyCroBased = Data.CompanyCroOffice = false;
+    }
     void SetWithhold() => Data.WithholdingCompanyName = !Data.WithholdingCompanyName;
+    void SetBased() => Data.CompanyCroBased = !Data.CompanyCroBased;
+    void SetOffice() => Data.CompanyCroOffice = !Data.CompanyCroOffice;
     string _companyLabel => Data.From switch
     {
         Who.ExternalRecruiter when Data.WithholdingCompanyName => "Your company",
@@ -82,6 +104,7 @@
         Who.InternalRecruiter => "Your company",
         _ => string.Empty
     };
+    string _basedCompanyLabel => Data.From == Who.ExternalRecruiter ? "Client company" : "Your company";
     string ValidationClass(string field)
     {
         if (_errors.ContainsKey(field))
@@ -113,7 +136,10 @@
     async Task<EventCallback<EventArgs>> Next()
     {
         if (Validate() && OnChange.HasDelegate)
+        {
+            Data.Step = Steps.LookingFor;
             await OnChange.InvokeAsync();
+        }
 
         return default;
     }
