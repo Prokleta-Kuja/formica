@@ -143,7 +143,7 @@
     {
         _wasValidated = true;
         _errors.Clear();
-        var processCount = Convert.ToString(Convert.ToInt32(Data.For), 2).Count(b => b == '1'); // Get flags count
+        var processCount = Convert.ToString(Convert.ToInt32(Data.Process), 2).Count(b => b == '1'); // Get flags count
         if (processCount == 0)
             _errors.Add(nameof(Data.Process), "Please select all that apply");
         if (string.IsNullOrWhiteSpace(Data.SelectionDuration))
