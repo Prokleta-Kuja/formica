@@ -16,7 +16,7 @@ public class Program
             InitializeDirectories();
             var builder = WebApplication.CreateBuilder(args);
             builder.Services.AddDataProtection()
-                .PersistKeysToFileSystem(new DirectoryInfo(C.Data));
+                .PersistKeysToFileSystem(new DirectoryInfo(C.Config));
 
             // Add services to the container.
             builder.Services.AddRazorPages();
@@ -51,8 +51,8 @@ public class Program
     static void InitializeDirectories()
     {
         Directory.CreateDirectory(C.Data);
-        var settingsJson = C.DataFor("settings.json");
-        var settingsJsonExample = C.DataFor("settings.example.json");
+        var settingsJson = C.ConfigFor("settings.json");
+        var settingsJsonExample = C.ConfigFor("settings.example.json");
         if (!File.Exists(settingsJson) && !File.Exists(settingsJsonExample))
             File.WriteAllText(settingsJsonExample, JsonSerializer.Serialize(C.Settings, C.JsonOpt));
 

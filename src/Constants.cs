@@ -7,7 +7,9 @@ public static class C
 {
     public static JsonSerializerOptions JsonOpt { get; } = new() { WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault };
     public static Settings Settings { get; set; } = new("host", 587, "user", "pass", "Subject", "Sender <sender@example.com>", "First Last <first.last@example.com>");
-    public static string Data => Path.Combine(Environment.CurrentDirectory, "data");
+    public static string Config => Path.Combine(Environment.CurrentDirectory, "config");
+    public static string ConfigFor(string filename) => Path.Combine(Config, filename);
+    public static string Data => Path.Combine(Config, "data");
     public static string DataFor(Guid id) => Path.Combine(Data, $"{id}.json");
     public static string DataFor(string filename) => Path.Combine(Data, filename);
 }
